@@ -10,4 +10,4 @@ example_graph.edges = {
     "E": ["B"],
 }
 
-breadth_first_search(example_graph, "A")
+breadth_first_search(example_graph, "A", "E")
