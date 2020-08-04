@@ -1,5 +1,5 @@
-from pathfinder.graph import Graph
 from pathfinder.breadth_first_search import breadth_first_search
+from pathfinder.graph import Graph
 
 example_graph = Graph()
 example_graph.edges = {
