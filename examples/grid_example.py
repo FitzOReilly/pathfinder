@@ -1,5 +1,10 @@
 from pathfinder import ascii_drawer
-from pathfinder.search import breadth_first_search, dijkstra_search, reconstruct_path
+from pathfinder.search import (
+    a_star_search,
+    breadth_first_search,
+    dijkstra_search,
+    reconstruct_path,
+)
 from pathfinder.square_grid import SquareGrid, WeightedGrid
 
 grid = SquareGrid(30, 15)
@@ -59,6 +64,26 @@ start = (1, 4)
 goal = (7, 8)
 
 came_from, cost_so_far = dijkstra_search(wgrid, start, goal)
+print(
+    ascii_drawer.draw_grid(
+        wgrid, tile_width=3, point_to=came_from, start=start, goal=goal
+    )
+)
+print()
+print(
+    ascii_drawer.draw_grid(
+        wgrid, tile_width=3, number=cost_so_far, start=start, goal=goal
+    )
+)
+print()
+print(
+    ascii_drawer.draw_grid(
+        wgrid, tile_width=3, path=reconstruct_path(came_from, start, goal)
+    )
+)
+print()
+
+came_from, cost_so_far = a_star_search(wgrid, start, goal)
 print(
     ascii_drawer.draw_grid(
         wgrid, tile_width=3, point_to=came_from, start=start, goal=goal
