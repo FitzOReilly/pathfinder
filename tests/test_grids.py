@@ -1,9 +1,9 @@
 import unittest
 
-from pathfinder.square_grid import SquareGrid
+from pathfinder.grids import SquareGrid
 
 
-class TestSquareGrid(unittest.TestCase):
+class TestGrids(unittest.TestCase):
     def setUp(self):
         pass
 

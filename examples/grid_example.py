@@ -1,11 +1,11 @@
-from pathfinder import ascii_drawer
-from pathfinder.search import (
+from pathfinder.algorithms import (
     a_star_search,
     breadth_first_search,
     dijkstra_search,
     reconstruct_path,
 )
-from pathfinder.square_grid import SquareGrid, WeightedGrid
+from pathfinder.grids import SquareGrid, WeightedGrid
+from pathfinder.views import ascii_drawer
 
 grid = SquareGrid(30, 15)
 grid.walls = []

@@ -14,7 +14,6 @@ class SquareGrid:
     def neighbors(self, node_id):
         (x, y) = node_id
         results = [(x + 1, y), (x, y - 1), (x - 1, y), (x, y + 1)]
-        # TODO Understand what's going on here
         if (x + y) % 2 == 0:
             results.reverse()  # Aesthetics
         results = filter(self.in_bounds, results)
