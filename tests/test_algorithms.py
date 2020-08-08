@@ -1,10 +1,10 @@
 import unittest
 
-from pathfinder.search import a_star_search, dijkstra_search, manhattan_dist
-from pathfinder.square_grid import WeightedGrid
+from pathfinder.algorithms import a_star_search, dijkstra_search, manhattan_dist
+from pathfinder.grids import WeightedGrid
 
 
-class TestSearch(unittest.TestCase):
+class TestAlgorithms(unittest.TestCase):
     def setUp(self):
         self.weighted_grid = WeightedGrid(10, 10)
 

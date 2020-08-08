@@ -1,4 +1,4 @@
-from pathfinder.breadth_first_search import breadth_first_search
+from pathfinder.algorithms import breadth_first_search
 from pathfinder.graph import Graph
 
 example_graph = Graph()
