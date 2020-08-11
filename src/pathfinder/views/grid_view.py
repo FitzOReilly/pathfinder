@@ -1,6 +1,8 @@
 import tkinter as tk
 from functools import partial
 
+from pathfinder.algorithms import a_star_search, reconstruct_path
+
 tile_colors = {
     "passable": "grey",
     "unpassable": "black",
@@ -19,6 +21,7 @@ class GridView:
         self._mark_style = "passable"
         self._start = None
         self._goal = None
+        self._path = None
 
     def set_style(self, style):
         self._mark_style = style
@@ -27,30 +30,58 @@ class GridView:
         widget["bg"] = tile_colors[style]
 
     def update_tile(self, event, node_id):
+        self.clear_path()
+
         if self._start == node_id:
             self._start = None
         elif self._goal == node_id:
             self._goal == None
 
+        if node_id in self._grid.walls:
+            self._grid.walls.remove(node_id)
+
         if self._mark_style == "start":
             if self._start is not None:
                 x, y = self._start
-                idx = self._grid.width * x + y
+                idx = self._grid.width * y + x
                 self.mark_tile(self._frm_tiles[idx], "passable")
             self._start = node_id
         if self._mark_style == "goal":
             if self._goal is not None:
                 x, y = self._goal
-                idx = self._grid.width * x + y
+                idx = self._grid.width * y + x
                 self.mark_tile(self._frm_tiles[idx], "passable")
             self._goal = node_id
+        if self._mark_style == "unpassable":
+            self._grid.walls.append(node_id)
 
         x, y = node_id
-        idx = self._grid.width * x + y
+        idx = self._grid.width * y + x
         self.mark_tile(self._frm_tiles[idx], self._mark_style)
 
     def update_grid(self):
         pass
+
+    def search(self):
+        self.clear_path()
+
+        if None in [self._start, self._goal]:
+            return
+
+        came_from, cost_so_far = a_star_search(self._grid, self._start, self._goal)
+        self._path = reconstruct_path(came_from, self._start, self._goal)
+        for node_id in self._path:
+            x, y = node_id
+            idx = self._grid.width * y + x
+            self.mark_tile(self._frm_tiles[idx], "path")
+
+    def clear_path(self):
+        if self._path is not None:
+            for node_id in self._path:
+                x, y = node_id
+                idx = self._grid.width * y + x
+                self.mark_tile(self._frm_tiles[idx], "passable")
+            self._path = None
 
     def draw_grid(self, master):
         frm_map = tk.Frame(master=master)
@@ -63,7 +94,7 @@ class GridView:
                 )
                 self._frm_tiles[idx].grid(row=row, column=col, padx=1, pady=1)
                 self._frm_tiles[idx].bind(
-                    "<Button-1>", partial(self.update_tile, node_id=(row, col))
+                    "<Button-1>", partial(self.update_tile, node_id=(col, row))
                 )
 
         frm_map.grid(row=0, column=0)
@@ -90,9 +121,12 @@ class GridView:
             command=partial(self.set_style, style="goal"),
         )
 
+        btn_search = tk.Button(master=frm_buttons, text="Fire!", command=self.search)
+
         btn_empty.grid(row=0, column=0)
         btn_wall.grid(row=0, column=1)
         btn_start.grid(row=0, column=2)
         btn_goal.grid(row=0, column=3)
+        btn_search.grid(row=0, column=4)
 
         frm_buttons.grid(row=1, column=0)

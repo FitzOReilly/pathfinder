@@ -77,11 +77,13 @@ def a_star_search(graph, start, goal, heuristic=manhattan_dist):
 
 
 def reconstruct_path(came_from, start, goal):
-    current = goal
+    if goal not in came_from:
+        return []
+
+    current = came_from[goal]
     path = []
     while current != start:
         path.append(current)
         current = came_from[current]
-    path.append(start)
     path.reverse()
     return path
