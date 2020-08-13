@@ -51,7 +51,7 @@ def manhattan_dist(a, b):
     return abs(x1 - x0) + abs(y1 - y0)
 
 
-def a_star_search(graph, start, goal, heuristic=manhattan_dist):
+def a_star_search(graph, start, goal, heuristic=manhattan_dist, observers=[]):
     frontier = PriorityQueue()
     frontier.put((0, start))
     came_from = {}
@@ -65,6 +65,10 @@ def a_star_search(graph, start, goal, heuristic=manhattan_dist):
         if current == goal:
             break
 
+        if current != start:
+            for obs in observers:
+                obs.update(current, "visited")
+
         for next_ in graph.neighbors(current):
             new_cost = cost_so_far[current] + graph.cost(current, next_)
             if next_ not in cost_so_far or new_cost < cost_so_far[next_]:
@@ -72,6 +76,9 @@ def a_star_search(graph, start, goal, heuristic=manhattan_dist):
                 cost_so_far[next_] = new_cost
                 priority = new_cost + heuristic(next_, goal)
                 frontier.put((priority, next_))
+                if next_ != goal:
+                    for obs in observers:
+                        obs.update(next_, "frontier")
 
     return came_from, cost_so_far
 

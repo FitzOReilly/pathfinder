@@ -1,3 +1,4 @@
+import time
 import tkinter as tk
 from functools import partial
 
@@ -21,6 +22,7 @@ class GridView:
         self._mark_style = "passable"
         self._start = None
         self._goal = None
+        self._visited = set()
         self._path = None
 
     def set_style(self, style):
@@ -59,13 +61,24 @@ class GridView:
         idx = self._grid.width * y + x
         self.mark_tile(self._frm_tiles[idx], self._mark_style)
 
+    def update(self, tile, style):
+        x, y = tile
+        idx = self._grid.width * y + x
+        self.mark_tile(self._frm_tiles[idx], style)
+        if style in ("frontier", "visited"):
+            self._visited.add(tile)
+        self._frm_tiles[idx].update()
+        time.sleep(0.01)
+
     def search(self):
         self.clear_path()
 
         if None in [self._start, self._goal]:
             return
 
-        came_from, cost_so_far = a_star_search(self._grid, self._start, self._goal)
+        came_from, cost_so_far = a_star_search(
+            self._grid, self._start, self._goal, observers=[self]
+        )
         self._path = reconstruct_path(came_from, self._start, self._goal)
         for node_id in self._path:
             x, y = node_id
@@ -74,11 +87,12 @@ class GridView:
 
     def clear_path(self):
         if self._path is not None:
-            for node_id in self._path:
+            for node_id in self._path + list(self._visited):
                 x, y = node_id
                 idx = self._grid.width * y + x
                 self.mark_tile(self._frm_tiles[idx], "passable")
             self._path = None
+            self._visited = set()
 
     def draw_grid(self, master):
         frm_map = tk.Frame(master=master)
