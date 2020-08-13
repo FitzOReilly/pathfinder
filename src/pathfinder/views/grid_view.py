@@ -59,9 +59,6 @@ class GridView:
         idx = self._grid.width * y + x
         self.mark_tile(self._frm_tiles[idx], self._mark_style)
 
-    def update_grid(self):
-        pass
-
     def search(self):
         self.clear_path()
 
