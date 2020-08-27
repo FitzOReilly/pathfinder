@@ -18,6 +18,8 @@ tile_colors = {
 
 class GridView:
     def __init__(self, grid):
+        self._update_interval_in_sec = 0.01
+
         self._grid = grid
         self._mark_style = "passable"
         self._start = None
@@ -68,7 +70,7 @@ class GridView:
         if style in ("frontier", "visited"):
             self._visited.add(tile)
         self._frm_tiles[idx].update()
-        time.sleep(0.01)
+        time.sleep(self._update_interval_in_sec)
 
     def search(self):
         self.clear_path()
