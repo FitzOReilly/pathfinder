@@ -39,7 +39,7 @@ class GridView:
         if self._start == node_id:
             self._start = None
         elif self._goal == node_id:
-            self._goal == None
+            self._goal = None
 
         if node_id in self._grid.walls:
             self._grid.walls.remove(node_id)
