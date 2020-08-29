@@ -9,8 +9,8 @@ from pathfinder.views.tk_grid_view import TkGridView
 def run():
     grid = WeightedGrid(30, 20)
     pathfinder = GridPathfinder(grid)
-    view = TkGridView(pathfinder)
 
+    view = TkGridView(pathfinder)
     window = tk.Tk()
     view.draw_grid(window)
     window.mainloop()
