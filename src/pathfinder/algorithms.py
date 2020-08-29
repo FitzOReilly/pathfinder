@@ -1,5 +1,7 @@
 from queue import PriorityQueue, Queue
 
+from pathfinder.enums import NodeStyle
+
 
 def breadth_first_search(graph, start, goal):
     frontier = Queue()
@@ -51,7 +53,7 @@ def manhattan_dist(a, b):
     return abs(x1 - x0) + abs(y1 - y0)
 
 
-def a_star_search(graph, start, goal, heuristic=manhattan_dist, observers=[]):
+def a_star_search(graph, start, goal, heuristic=manhattan_dist, event_manager=None):
     frontier = PriorityQueue()
     frontier.put((0, start))
     came_from = {}
@@ -66,8 +68,8 @@ def a_star_search(graph, start, goal, heuristic=manhattan_dist, observers=[]):
             break
 
         if current != start:
-            for obs in observers:
-                obs.update(current, "visited")
+            if event_manager:
+                event_manager.notify(current, NodeStyle.VISITED)
 
         for next_ in graph.neighbors(current):
             new_cost = cost_so_far[current] + graph.cost(current, next_)
@@ -77,8 +79,8 @@ def a_star_search(graph, start, goal, heuristic=manhattan_dist, observers=[]):
                 priority = new_cost + heuristic(next_, goal)
                 frontier.put((priority, next_))
                 if next_ != goal:
-                    for obs in observers:
-                        obs.update(next_, "frontier")
+                    if event_manager:
+                        event_manager.notify(next_, NodeStyle.FRONTIER)
 
     return came_from, cost_so_far
 
