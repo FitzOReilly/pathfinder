@@ -22,21 +22,26 @@ tile_colors = {
 
 
 class KivyPathfinderApp(App):
-    def bind(self, pathfinder):
+    def __init__(self):
+        super().__init__()
         self._update_interval_in_sec = 0.001
+        self._pathfinder = None
+        self._node_style = NodeStyle.PASSABLE
+        self._paint_queue = Queue()
+        self._clock_event = None
+
+    def on_stop(self):
+        self._pathfinder.unsubscribe(self)
+        self.root_window.close()
+
+    def bind(self, pathfinder):
+        if self._pathfinder is not None:
+            self._pathfinder.unsubscribe(self)
 
         self._pathfinder = pathfinder
         self._pathfinder.subscribe(self)
 
-        self._node_style = NodeStyle.PASSABLE
-
-        self._paint_queue = Queue()
-        Clock.schedule_interval(self.paint_callback, self._update_interval_in_sec)
-
-        self.layout()
-
-    def __del__(self):
-        self._pathfinder.unsubscribe(self)
+        self._layout()
 
     def set_style(self, instance, style):
         self._node_style = style
@@ -48,15 +53,23 @@ class KivyPathfinderApp(App):
         widget.background_color = tile_colors[style]
 
     def paint_callback(self, instance, *args):
-        if not self._paint_queue.empty():
-            node_id, style = self._paint_queue.get()
-            idx = self.to_idx(node_id)
-            grid_layout = self.root.children[1]
-            widget = grid_layout.children[idx]
-            self.paint_tile(widget, style)
+        if self._paint_queue.empty():
+            Clock.unschedule(self._clock_event)
+            self._clock_event = None
+            return
+
+        node_id, style = self._paint_queue.get()
+        idx = self.to_idx(node_id)
+        grid_layout = self.root.children[1]
+        widget = grid_layout.children[idx]
+        self.paint_tile(widget, style)
 
     def update(self, node_id, style):
         self._paint_queue.put((node_id, style))
+        if self._clock_event is None:
+            self._clock_event = Clock.schedule_interval(
+                self.paint_callback, self._update_interval_in_sec
+            )
 
     def to_idx(self, node_id):
         x, y = node_id
@@ -67,7 +80,10 @@ class KivyPathfinderApp(App):
     def search(self, instance):
         self._pathfinder.search()
 
-    def draw_grid(self):
+    def build(self):
+        return self.root
+
+    def _draw_grid(self):
         rows = self._pathfinder.grid.height
         cols = self._pathfinder.grid.width
         grid_layout = GridLayout(rows=rows, cols=cols)
@@ -78,9 +94,9 @@ class KivyPathfinderApp(App):
                 grid_layout.add_widget(btn)
         return grid_layout
 
-    def layout(self):
+    def _layout(self):
         main_layout = BoxLayout(orientation="vertical")
-        grid_layout = self.draw_grid()
+        grid_layout = self._draw_grid()
         main_layout.add_widget(grid_layout)
         button_layout = BoxLayout(orientation="horizontal", size_hint=(1, 0.1))
         passable_btn = Button(text="Passable")
@@ -102,6 +118,3 @@ class KivyPathfinderApp(App):
         button_layout.add_widget(search_btn)
         main_layout.add_widget(button_layout)
         self.root = main_layout
-
-    def build(self):
-        return self.root
