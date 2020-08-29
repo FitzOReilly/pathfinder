@@ -9,7 +9,7 @@ class GridPathfinder:
         self._start = None
         self._goal = None
         self._visited = set()
-        self._path = None
+        self._path = []
 
         self._strategy = algos.a_star_search
         self._events = EventManager()
@@ -20,7 +20,6 @@ class GridPathfinder:
 
     def modify_node(self, node_id, style):
         self.clear_path()
-        pass
 
         if self._start == node_id:
             self._start = None
@@ -52,16 +51,18 @@ class GridPathfinder:
         came_from, cost_so_far = self._strategy(
             self._grid, self._start, self._goal, event_manager=self._events
         )
+        for node_id in came_from:
+            self._visited.add(node_id)
         self._path = algos.reconstruct_path(came_from, self._start, self._goal)
         for node_id in self._path:
             self._events.notify(node_id, NodeStyle.PATH)
 
     def clear_path(self):
-        if self._path is not None:
-            for node_id in self._path + list(self._visited):
+        for node_id in self._visited:
+            if node_id not in (self._start, self._goal):
                 self._events.notify(node_id, NodeStyle.PASSABLE)
-            self._path.clear()
         self._visited.clear()
+        self._path.clear()
 
     def subscribe(self, observer):
         self._events.subscribe(observer)
