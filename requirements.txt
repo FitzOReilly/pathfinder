@@ -1,6 +1,10 @@
+--pre --extra-index-url=https://kivy.org/downloads/simple/
+
 black
 flake8
 isort
+kivy[base]
+kivy_examples
 pre-commit
 tox
 -e .
