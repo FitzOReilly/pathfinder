@@ -1,3 +1,4 @@
+from math import dist
 from queue import PriorityQueue, Queue
 
 from pathfinder.enums import NodeStyle
@@ -53,7 +54,11 @@ def manhattan_dist(a, b):
     return abs(x1 - x0) + abs(y1 - y0)
 
 
-def a_star_search(graph, start, goal, heuristic=manhattan_dist, event_manager=None):
+def euclidean_dist(a, b):
+    return dist(a, b)
+
+
+def a_star_search(graph, start, goal, heuristic=euclidean_dist, event_manager=None):
     frontier = PriorityQueue()
     frontier.put((0, start))
     came_from = {}
