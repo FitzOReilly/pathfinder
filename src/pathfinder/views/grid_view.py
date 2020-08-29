@@ -2,112 +2,72 @@ import time
 import tkinter as tk
 from functools import partial
 
-from pathfinder.algorithms import a_star_search, reconstruct_path
+from pathfinder.enums import NodeStyle
 
 tile_colors = {
-    "passable": "grey",
-    "unpassable": "black",
-    "out_of_bounds": "black",
-    "start": "green",
-    "goal": "red",
-    "frontier": "purple",
-    "visited": "blue",
-    "path": "yellow",
+    NodeStyle.PASSABLE: "grey",
+    NodeStyle.UNPASSABLE: "black",
+    NodeStyle.OUT_OF_BOUNDS: "black",
+    NodeStyle.START: "green",
+    NodeStyle.GOAL: "red",
+    NodeStyle.FRONTIER: "purple",
+    NodeStyle.VISITED: "blue",
+    NodeStyle.PATH: "yellow",
 }
 
 
 class GridView:
-    def __init__(self, grid):
+    def __init__(self, pathfinder):
         self._update_interval_in_sec = 0.01
 
-        self._grid = grid
-        self._mark_style = "passable"
-        self._start = None
-        self._goal = None
-        self._visited = set()
-        self._path = None
+        self._pathfinder = pathfinder
+        self._pathfinder.subscribe(self)
+
+        self._node_style = NodeStyle.PASSABLE
+
+    def __del__(self):
+        self._pathfinder.unsubscribe(self)
 
     def set_style(self, style):
-        self._mark_style = style
+        self._node_style = style
 
-    def mark_tile(self, widget, style):
+    def paint_tile(self, widget, style):
         widget["bg"] = tile_colors[style]
 
-    def update_tile(self, event, node_id):
-        self.clear_path()
+    def modify_tile(self, event, node_id):
+        self._pathfinder.modify_node(node_id, self._node_style)
 
-        if self._start == node_id:
-            self._start = None
-        elif self._goal == node_id:
-            self._goal = None
-
-        if node_id in self._grid.walls:
-            self._grid.walls.remove(node_id)
-
-        if self._mark_style == "start":
-            if self._start is not None:
-                x, y = self._start
-                idx = self._grid.width * y + x
-                self.mark_tile(self._frm_tiles[idx], "passable")
-            self._start = node_id
-        if self._mark_style == "goal":
-            if self._goal is not None:
-                x, y = self._goal
-                idx = self._grid.width * y + x
-                self.mark_tile(self._frm_tiles[idx], "passable")
-            self._goal = node_id
-        if self._mark_style == "unpassable":
-            self._grid.walls.append(node_id)
-
-        x, y = node_id
-        idx = self._grid.width * y + x
-        self.mark_tile(self._frm_tiles[idx], self._mark_style)
-
-    def update(self, tile, style):
-        x, y = tile
-        idx = self._grid.width * y + x
-        self.mark_tile(self._frm_tiles[idx], style)
-        if style in ("frontier", "visited"):
-            self._visited.add(tile)
+    def update(self, node_id, style):
+        idx = self.to_idx(node_id)
+        self.paint_tile(self._frm_tiles[idx], style)
         self._frm_tiles[idx].update()
         time.sleep(self._update_interval_in_sec)
 
     def search(self):
-        self.clear_path()
+        self._pathfinder.search()
 
-        if None in [self._start, self._goal]:
-            return
-
-        came_from, cost_so_far = a_star_search(
-            self._grid, self._start, self._goal, observers=[self]
-        )
-        self._path = reconstruct_path(came_from, self._start, self._goal)
-        for node_id in self._path:
-            x, y = node_id
-            idx = self._grid.width * y + x
-            self.mark_tile(self._frm_tiles[idx], "path")
-
-    def clear_path(self):
-        if self._path is not None:
-            for node_id in self._path + list(self._visited):
-                x, y = node_id
-                idx = self._grid.width * y + x
-                self.mark_tile(self._frm_tiles[idx], "passable")
-            self._path = None
-            self._visited = set()
+    def to_idx(self, node_id):
+        x, y = node_id
+        idx = self._pathfinder.grid.width * y + x
+        return idx
 
     def draw_grid(self, master):
         frm_map = tk.Frame(master=master)
-        self._frm_tiles = self._grid.height * self._grid.width * [None]
-        for row in range(self._grid.height):
-            for col in range(self._grid.width):
-                idx = self._grid.width * row + col
+        self._frm_tiles = (
+            self._pathfinder.grid.height * self._pathfinder.grid.width * [None]
+        )
+        for row in range(self._pathfinder.grid.height):
+            for col in range(self._pathfinder.grid.width):
+                idx = self._pathfinder.grid.width * row + col
                 self._frm_tiles[idx] = tk.Frame(
-                    master=frm_map, width=20, height=20, bg=tile_colors["passable"]
+                    master=frm_map,
+                    width=20,
+                    height=20,
+                    bg=tile_colors[NodeStyle.PASSABLE],
                 )
                 self._frm_tiles[idx].grid(row=row, column=col, padx=1, pady=1)
                 self._frm_tiles[idx].bind(
-                    "<Button-1>", partial(self.update_tile, node_id=(col, row))
+                    "<Button-1>", partial(self.modify_tile, node_id=(col, row))
                 )
 
         frm_map.grid(row=0, column=0)
@@ -116,22 +76,22 @@ class GridView:
         btn_empty = tk.Button(
             master=frm_buttons,
             text="Empty",
-            command=partial(self.set_style, style="passable"),
+            command=partial(self.set_style, style=NodeStyle.PASSABLE),
         )
         btn_wall = tk.Button(
             master=frm_buttons,
             text="Wall",
-            command=partial(self.set_style, style="unpassable"),
+            command=partial(self.set_style, style=NodeStyle.UNPASSABLE),
         )
         btn_start = tk.Button(
             master=frm_buttons,
             text="Start",
-            command=partial(self.set_style, style="start"),
+            command=partial(self.set_style, style=NodeStyle.START),
         )
         btn_goal = tk.Button(
             master=frm_buttons,
             text="Goal",
-            command=partial(self.set_style, style="goal"),
+            command=partial(self.set_style, style=NodeStyle.GOAL),
         )
 
         btn_search = tk.Button(master=frm_buttons, text="Fire!", command=self.search)
