@@ -16,7 +16,7 @@ tile_colors = {
 }
 
 
-class GridView:
+class TkGridView:
     def __init__(self, pathfinder):
         self._update_interval_in_sec = 0.01
 
